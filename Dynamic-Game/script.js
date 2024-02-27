@@ -2,10 +2,12 @@ var choice;
 var stageCounter = 1;
 var isLoading = true;
 var tempStory = "";
+var isStoryTelling = true;
 
 const storyElement = document.querySelector(".story-text");
 const choice1Element = document.getElementById("option1");
 const choice2Element = document.getElementById("option2");
+const synth = window.speechSynthesis;
 
 var userInput;
 
@@ -42,11 +44,13 @@ async function generate() {
   try {
     const response = await sendUserInput(userInput);
     storyElement.innerHTML = formatStoryString(response);
+    speak(storyElement.textContent);
     toggleLoading();
   } catch (error) {
     console.error(error);
     console.log("Error:", error);
     toggleLoading();
+    speak("Sorry, I couldn't generate the story. Please try again.");
   }
 }
 
@@ -210,5 +214,46 @@ function dropDown() {
     mobileDropdownIcon.style.transform = "rotate(0deg)";
     console.log("hiding dropdown");
     isDropdownOpen = false;
+  }
+}
+
+function speak(text) {
+  if (!isStoryTelling) return;
+  console.log("Speaking:", text);
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  // Get the list of available voices
+  const voices = synth.getVoices();
+
+  // Find a female voice with a pleasant tone (customize as needed)
+  const femaleVoice = voices.find(
+    (voice) => voice.name.includes("Female") && voice.lang.includes("en")
+  );
+
+  // Set the selected voice
+  utterance.voice = femaleVoice || voices[0]; // Use the first available voice if a suitable female voice is not found
+
+  // Additional voice settings (customize as needed)
+  utterance.rate = 1.0; // Speech rate (adjust as needed)
+  utterance.pitch = 1.0; // Speech pitch (adjust as needed)
+
+  // Speak the text
+  synth.speak(utterance);
+}
+
+function stopSpeaking() {
+  synth.cancel();
+}
+
+function toggleStoryTeller() {
+  const storyTeller = document.querySelector(".toggle-button-story");
+  if (isStoryTelling) {
+    console.log("Storytelling turned off");
+    storyTeller.textContent = "OFF";
+    storyTeller.style.backgroundColor = "transparent";
+  } else {
+    console.log("Storytelling turned on");
+    storyTeller.textContent = "ON";
+    storyTeller.style.backgroundColor = "green";
   }
 }
